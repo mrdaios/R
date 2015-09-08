@@ -1,2 +1,29 @@
 # R
-a tool to generate resources.
+
+[![CI Status](http://img.shields.io/travis/mrdaios/R.svg?style=flat)](https://travis-ci.org/mrdaios/R)
+[![Version](https://img.shields.io/cocoapods/v/R.svg?style=flat)](http://cocoapods.org/pods/R)
+[![License](https://img.shields.io/cocoapods/l/R.svg?style=flat)](http://cocoapods.org/pods/R)
+[![Platform](https://img.shields.io/cocoapods/p/R.svg?style=flat)](http://cocoapods.org/pods/R)
+
+## Usage
+
+To run the example project, clone the repo, and run `pod install` from the Example directory first.
+
+## Requirements
+
+## Installation
+
+R is available through [CocoaPods](http://cocoapods.org). To install
+it, simply add the following line to your Podfile:
+
+```ruby
+pod "R"
+```
+
+## Author
+
+mrdaios, mrdaios@gmail.com
+
+## License
+
+R is available under the MIT license. See the LICENSE file for more info.
