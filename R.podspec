@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "R"
-  s.version          = "0.1.0"
+  s.version          = "0.1.1"
   s.summary          = "a tool to generate resources."
   s.description      = <<-DESC
                       a tools to generate resources. 
