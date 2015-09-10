@@ -248,17 +248,10 @@ static char kUnknow = -1;
     NSURL *interfaceURL = [currentDirectory URLByAppendingPathComponent:classNameH];
     NSURL *implementationURL = [currentDirectory URLByAppendingPathComponent:classNameM];
 
-    [self.interfaceContents sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-      return [obj1 compare:obj2];
-    }];
-    [self.implementationContents sortUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-      return [obj1 compare:obj2];
-    }];
-
     NSMutableString *interface = [NSMutableString
         stringWithFormat:@"//\n// This file is generated from %@ by %@.\n// Please do not "
-                         @"edit.\n//\n\n#import <UIKit/UIKit.h>\n\n\n",
-                         self.inputURL.lastPathComponent, @""];
+                         @"edit.\n//\n\n#import <Foundation/Foundation.h>\n\n\n",
+                         self.inputURL.lastPathComponent, self.toolName];
     [interface appendFormat:@"@interface %@ : NSObject\n\n%@\n@end\n", self.className,
                             [self.interfaceContents componentsJoinedByString:@""]];
 
@@ -272,7 +265,7 @@ static char kUnknow = -1;
     NSMutableString *implementation = [NSMutableString
         stringWithFormat:@"//\n// This file is generated from %@ by %@.\n// Please do not "
                          @"edit.\n//\n\n#import \"%@\"\n\n\n",
-                         self.inputURL.lastPathComponent, @"", classNameH];
+                         self.inputURL.lastPathComponent, self.toolName, classNameH];
 
     [implementation appendFormat:@"@implementation %@\n\n%@\n@end\n", self.className,
                                  [self.implementationContents componentsJoinedByString:@"\n"]];

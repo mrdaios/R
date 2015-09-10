@@ -13,4 +13,5 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '7.0'
   s.requires_arc = true
   s.preserve_paths = 'tools/*'
+  s.prepare_command = 'ruby tools/RConfigurator.rb'
 end

@@ -33,22 +33,28 @@
             enumerateObjectsUsingBlock:^(NSTextCheckingResult *match, NSUInteger idx, BOOL *stop) {
               // TODO: 同一行多个配置,多文件的支持
               NSString *key = [resourceContent substringWithRange:[match rangeAtIndex:1]];
-
+              NSString *value = [resourceContent substringWithRange:[match rangeAtIndex:2]];
               NSString *methodName = [self methodNameForKey:key];
               NSString *interface = [NSString stringWithFormat:@"- (NSString *)%@;\n", methodName];
-              @synchronized(self.interfaceContents)
+              NSString *comment = [NSString stringWithFormat:@"/**\n*  %@\n*/\n", value];
+              //判断是否有重复的
+              if (![self.interfaceContents containsObject:interface])
               {
-                  [self.interfaceContents addObject:interface];
-              }
+                  @synchronized(self.interfaceContents)
+                  {
+                      [self.interfaceContents addObject:comment];
+                      [self.interfaceContents addObject:interface];
+                  }
 
-              NSMutableString *implementation = [interface mutableCopy];
-              [implementation appendString:@"{\n"];
-              [implementation
-                  appendFormat:@"    return NSLocalizedString(@\"%@\",\"%@\");\n", key, key];
-              [implementation appendString:@"}\n"];
-              @synchronized(self.implementationContents)
-              {
-                  [self.implementationContents addObject:implementation];
+                  NSMutableString *implementation = [interface mutableCopy];
+                  [implementation appendString:@"{\n"];
+                  [implementation
+                      appendFormat:@"    return NSLocalizedString(@\"%@\",\"%@\");\n", key, value];
+                  [implementation appendString:@"}\n"];
+                  @synchronized(self.implementationContents)
+                  {
+                      [self.implementationContents addObject:implementation];
+                  }
               }
             }];
     }
