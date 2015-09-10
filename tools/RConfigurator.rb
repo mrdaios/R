@@ -31,7 +31,8 @@ class RConfigurator
         if !phase
           phase = project.new(Xcodeproj::Project::PBXShellScriptBuildPhase)
           phase.name = "R"
-          phase.shell_script = '"$PODS_ROOT/R/tools/RLocalizable" -o "$SRCROOT/$TARGET_NAME/R/string" -p "$TARGET_NAME" "$SRCROOT/$TARGET_NAME/Localizable.strings"'
+          phase.shell_script = '"$PODS_ROOT/R/tools/RLocalizable" -o "$SRCROOT/$TARGET_NAME/R/string" -p "$TARGET_NAME" "$SRCROOT/$TARGET_NAME/Localizable.strings"
+          "$PODS_ROOT/R/tools/RImage" -o "$SRCROOT/$TARGET_NAME/R/image" -p "$TARGET_NAME" "$SRCROOT/$TARGET_NAME/Images.xcassets"'
           main_target.build_phases.insert(0,phase)
           project.save()
         end

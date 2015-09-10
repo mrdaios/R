@@ -13,8 +13,6 @@ static char kUnknow = -1;
 
 @interface ResourceTool ()
 
-@property (nonatomic, strong) NSMutableArray *resourceURLs;
-
 @property (nonatomic, strong, readwrite) NSMutableArray *interfaceContents;
 @property (nonatomic, strong, readwrite) NSMutableArray *implementationContents;
 
@@ -100,7 +98,15 @@ static char kUnknow = -1;
     {
         NSString *inputPath = [[NSString alloc] initWithUTF8String:argv[index]];
         inputPath = [inputPath stringByExpandingTildeInPath];
-        [inputURLs addObject:[NSURL fileURLWithPath:inputPath]];
+        NSURL *url = [NSURL fileURLWithPath:inputPath];
+        //过滤指定类型的文件
+        if ([url.pathExtension isEqualToString:[self inputFileExtension]])
+        {
+            if (![inputURLs containsObject:url])
+            {
+                [inputURLs addObject:url];
+            }
+        }
     }
     if (searchURL)
     {
@@ -114,17 +120,21 @@ static char kUnknow = -1;
             //过滤指定类型的文件
             if ([url.pathExtension isEqualToString:[self inputFileExtension]])
             {
-                [inputURLs addObject:url];
+                if (![inputURLs containsObject:url])
+                {
+                    [inputURLs addObject:url];
+                }
             }
         }
     }
+    // TODO: 去掉重复的资源
     //处理文件
     dispatch_group_t group = dispatch_group_create();
     for (NSURL *url in inputURLs)
     {
         dispatch_group_enter(group);
         ResourceTool *target = [[self alloc] init];
-        target.toolName = [NSString stringWithUTF8String:argv[0]];
+        target.toolName = [[NSString stringWithUTF8String:argv[0]] lastPathComponent];
         target.inputURL = url;
         target.classPrefix = classPrefix;
         [target startWithCompletionHandler:^{
@@ -151,37 +161,11 @@ static char kUnknow = -1;
     printf("    <paths>     Input files; this and/or -f are required.\n");
 }
 
-- (void)findFileURLsWithExtension
-{
-    NSMutableArray *resourceURLs = [NSMutableArray array];
-    if ([self.inputURL isFileURL])
-    {
-        [resourceURLs addObject:self.inputURL];
-    }
-    else
-    {
-        NSDirectoryEnumerator *enumerator =
-            [[[NSFileManager alloc] init] enumeratorAtURL:self.inputURL
-                               includingPropertiesForKeys:@[ NSURLNameKey ]
-                                                  options:0
-                                             errorHandler:NULL];
-        for (NSURL *url in enumerator)
-        {
-            if ([url.pathExtension isEqualToString:[[self class] inputFileExtension]])
-            {
-                [resourceURLs addObject:url];
-            }
-        }
-    }
-    self.resourceURLs = resourceURLs;
-}
-
 - (void)startWithCompletionHandler:(dispatch_block_t)completionBlock
 {
     dispatch_group_t dispatchGroup = dispatch_group_create();
     dispatch_queue_t dispatchQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     dispatch_async(dispatchQueue, ^{
-      [self findFileURLsWithExtension];
 
       self.interfaceContents = [NSMutableArray array];
       self.implementationContents = [NSMutableArray array];
@@ -190,12 +174,10 @@ static char kUnknow = -1;
           stringWithFormat:@"%@%@", self.classPrefix,
                            [[self.inputURL lastPathComponent] stringByDeletingPathExtension]];
 
-      for (NSURL *imageSetURL in self.resourceURLs)
-      {
-          dispatch_group_async(dispatchGroup, dispatchQueue, ^{
-            [self parseResourceAtURL:imageSetURL];
-          });
-      }
+      dispatch_group_async(dispatchGroup, dispatchQueue, ^{
+        [self parseResourceAtURL:self.inputURL];
+      });
+
       dispatch_group_wait(dispatchGroup, DISPATCH_TIME_FOREVER);
 
       [self writeOutputFiles];
@@ -249,9 +231,10 @@ static char kUnknow = -1;
     NSURL *implementationURL = [currentDirectory URLByAppendingPathComponent:classNameM];
 
     NSMutableString *interface = [NSMutableString
-        stringWithFormat:@"//\n// This file is generated from %@ by %@.\n// Please do not "
-                         @"edit.\n//\n\n#import <Foundation/Foundation.h>\n\n\n",
-                         self.inputURL.lastPathComponent, self.toolName];
+        stringWithFormat:
+            @"//\n// This file is generated from %@ by %@.\n// Please do not "
+            @"edit.\n//\n\n#import <Foundation/Foundation.h>\n#import <UIKit/UIKit.h>\n\n",
+            self.inputURL.lastPathComponent, self.toolName];
     [interface appendFormat:@"@interface %@ : NSObject\n\n%@\n@end\n", self.className,
                             [self.interfaceContents componentsJoinedByString:@""]];
 
@@ -264,7 +247,7 @@ static char kUnknow = -1;
 
     NSMutableString *implementation = [NSMutableString
         stringWithFormat:@"//\n// This file is generated from %@ by %@.\n// Please do not "
-                         @"edit.\n//\n\n#import \"%@\"\n\n\n",
+                         @"edit.\n//\n\n#import \"%@\"\n\n",
                          self.inputURL.lastPathComponent, self.toolName, classNameH];
 
     [implementation appendFormat:@"@implementation %@\n\n%@\n@end\n", self.className,
@@ -279,8 +262,6 @@ static char kUnknow = -1;
                           encoding:NSUTF8StringEncoding
                              error:NULL];
     }
-
-    NSLog(@"Wrote %@ to %@", self.className, currentDirectory);
 }
 
 #pragma mark
